@@ -1,4 +1,6 @@
-class Asignatura:
+from MostrarInfo import MostrarInfo
+
+class Asignatura(MostrarInfo):
     def __init__(self, nombre, codigo, creditos):
         self.__nombre = nombre
         self.__codigo = codigo

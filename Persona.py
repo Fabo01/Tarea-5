@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-
+from datetime import datetime
 class Persona(ABC):
-    def __init__(self, nombre, edad, fnacimiento):
+    def __init__(self, nombre, fnacimiento):
         self.__nombre = nombre
-        self.__edad = edad
+
         self.__fnacimiento = fnacimiento
 
     @property
@@ -15,20 +15,21 @@ class Persona(ABC):
         self.__nombre = nombre
 
     @property
-    def edad(self):
-        return self.__edad
-    
-    @edad.setter
-    def edad(self, edad):
-        self.__edad = edad
-
-    @property
     def fnacimiento(self):
         return self.__fnacimiento
 
     @fnacimiento.setter
     def fnacimiento(self, fnacimiento):
         self.__fnacimiento = fnacimiento
+
+    def calcular_edad(self):
+        fecha_nac = datetime.strptime(self.__fnacimiento, "%d/%m/%Y")
+        fecha_actual = datetime.now()
+        edad = fecha_actual.year - fecha_nac.year
+        # Si aún no ha cumplido años este año, restar 1
+        if (fecha_actual.month, fecha_actual.day) < (fecha_nac.month, fecha_nac.day):
+            edad -= 1
+        return edad
 
     @abstractmethod
     def presentarse(self):

@@ -1,8 +1,8 @@
 from Persona import Persona
 
 class Profesor(Persona):
-    def __init__(self, nombre, edad, fnacimiento, nempleado, departamento):
-        super().__init__(nombre, edad, fnacimiento)
+    def __init__(self, nombre, fnacimiento, nempleado, departamento):
+        super().__init__(nombre, fnacimiento)
         self.__n_empleado = nempleado
         self.__departamento = departamento
 
@@ -26,4 +26,5 @@ class Profesor(Persona):
         print(f'{self.nombre} imparte la asignatura {asignatura} durante {horas} horas.')
 
     def presentarse(self):
-        print(f'Nombre: {self.nombre}, Edad: {self.edad}, Departamento: {self.departamento}, Num. Empleado: {self.n_empleado}')
+        edad = self.calcular_edad()
+        print(f'Nombre: {self.nombre}, Edad: {edad}, Departamento: {self.departamento}, Num. Empleado: {self.n_empleado}')

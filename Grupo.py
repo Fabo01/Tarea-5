@@ -1,8 +1,9 @@
 from Estudiante import Estudiante
 from Profesor import Profesor
 from Asignatura import Asignatura
+from MostrarInfo import MostrarInfo
 
-class Grupo:
+class Grupo(MostrarInfo):
     def __init__(self, ngrupo:int, asignatura:Asignatura, profesor:Profesor):
         self.__ngrupo = ngrupo
         self.__asignatura = asignatura
@@ -40,20 +41,21 @@ class Grupo:
     def agregar_estudiante(self, estudiante):              ###  REVISAR  ###o
         if estudiante not in self.__estudiantes:
             self.__estudiantes.append(estudiante)
-            print(f"Estudiante {estudiante.nombre} ha sido agregado al grupo {self.__ngrupo}.")
+            print(f"\nEstudiante {estudiante.nombre} ha sido agregado al grupo {self.__ngrupo}.")
         else:
-            print(f"El estudiante {estudiante.nombre} ya está inscrito en el grupo.")
+            print(f"\nEl estudiante {estudiante.nombre} ya está inscrito en el grupo.")
 
     def eliminar_estudiante(self, matricula):
         for estudiante in self.__estudiantes:
             if estudiante.matricula == matricula:
                 self.__estudiantes.remove(estudiante)
-                print(f"Estudiante con matrícula {matricula} ha sido eliminado del grupo.")
+                print(f"\nEstudiante con matrícula {matricula} ha sido eliminado del grupo.")
                 return
-        print(f"No se encontró un estudiante con matrícula {matricula}.")
+        print(f"\nNo se encontró un estudiante con matrícula {matricula}.")
 
     def mostrar_info(self):
         print(f"Grupo: {self.__ngrupo}, Asignatura: {self.__asignatura.nombre}, Profesor: {self.__profesor.nombre}")
         print("Estudiantes:")
         for estudiante in self.__estudiantes:
-            print(f" - {estudiante.nombre} {estudiante.edad}, matrícula: {estudiante.matricula}")
+            edad = estudiante.calcular_edad()
+            print(f" - {estudiante.nombre} de {edad} años, matrícula: {estudiante.matricula}")
