@@ -38,7 +38,7 @@ class Grupo(MostrarInfo):
     def estudiantes(self):
         return self.__estudiantes
     
-    def agregar_estudiante(self, estudiante):              ###  REVISAR  ###o
+    def agregar_estudiante(self, estudiante):             
         if estudiante not in self.__estudiantes:
             self.__estudiantes.append(estudiante)
             print(f"\nEstudiante {estudiante.nombre} ha sido agregado al grupo {self.__ngrupo}.")
