@@ -3,7 +3,6 @@ from datetime import datetime
 class Persona(ABC):
     def __init__(self, nombre, fnacimiento):      # Clase abstracta para Estudiante y Profesor
         self.__nombre = nombre
-
         self.__fnacimiento = fnacimiento
 
     @property

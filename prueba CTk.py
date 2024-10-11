@@ -15,7 +15,7 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
 
         # Configuración de la ventana principal
         self.title("Sistema de Gestión Universitaria")
-        self.geometry("800x600")
+        self.geometry("1000x800")
 
         # Datos
         self.estudiantes = []
@@ -158,6 +158,11 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
         # Limpiar el frame y preparar el menú para estudiar una materia
         self.limpiar_frame()
 
+        if not self.asignaturas:
+            CTkM(title="Error", message="No hay asignaturas creadas.", icon="cancel")
+            self.crear_menu_principal()
+            return
+        
         titulo = CTk.CTkLabel(self.frame_principal, text="Estudiar Materia", font=("Arial", 24))
         titulo.pack(pady=20)
 
@@ -168,10 +173,6 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
         self.entry_matricula_estudio.pack()
 
         # Mostrar asignaturas disponibles
-        if not self.asignaturas:
-            CTkM(title="Error", message="No hay asignaturas creadas.", icon="cancel")
-            self.crear_menu_principal()
-            return
 
         label_asignatura = CTk.CTkLabel(self.frame_principal, text="Seleccione una Asignatura:")
         label_asignatura.pack()
@@ -249,7 +250,7 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
                     f"Matrícula: {estudiante.matricula}\n"
                     f"Carrera: {estudiante.carrera}\n"
                     f"Semestre: {estudiante.semestre}\n"
-                    f"Fecha de Nacimiento: {estudiante.fnacimiento}",
+                    f"Edad: {estudiante.calcular_edad()}",
             icon="info"
         )
 
@@ -258,57 +259,77 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
     def mostrar_estudiantes(self):
         self.limpiar_frame()
 
+        if not self.estudiantes:
+            CTkM(title="Error", message="No hay estudiantes registrados.", icon="cancel")
+            self.crear_menu_principal()
+            return
+        
         titulo = CTk.CTkLabel(self.frame_principal, text="Lista de Estudiantes", font=("Arial", 24))
         titulo.pack(pady=20)
 
-        # Crear el Treeview para mostrar los estudiantes
-        self.tree_estudiantes = ttk.Treeview(self.frame_principal, columns=("nombre", "matricula", "carrera", "semestre", "fnacimiento"), show="headings")
-        self.tree_estudiantes.heading("nombre", text="Nombre")
-        self.tree_estudiantes.heading("matricula", text="Matrícula")
-        self.tree_estudiantes.heading("carrera", text="Carrera")
-        self.tree_estudiantes.heading("semestre", text="Semestre")
-        self.tree_estudiantes.heading("fnacimiento", text="Fecha de Nacimiento")
+        # Obtener los nombres de los atributos del primer estudiante
+        columnas = list(vars(self.estudiantes[0]).keys())
+
+        # Crear el Treeview
+        self.tree_estudiantes = ttk.Treeview(self.frame_principal, columns=columnas, show="headings")
+
+        for columna in columnas:
+            columna_formateada = columna.replace("_", " ").capitalize()
+            self.tree_estudiantes.heading(columna, text=columna_formateada)
 
         self.tree_estudiantes.pack(pady=10)
 
         # Llenar el Treeview con los estudiantes existentes
         for estudiante in self.estudiantes:
-            self.tree_estudiantes.insert("", "end", values=(estudiante.nombre, estudiante.matricula, estudiante.carrera, estudiante.semestre, estudiante.fnacimiento))
+            valores = [getattr(estudiante, columna) for columna in columnas]
+            self.tree_estudiantes.insert("", "end", values=valores)
 
-        # Botón para eliminar estudiante seleccionado
-        btn_eliminar = CTk.CTkButton(self.frame_principal, text="Eliminar Estudiante", command=self.eliminar_estudiante_treeview)
-        btn_eliminar.pack(pady=10)
+        # Botón para eliminar
+        btn_eliminar = CTk.CTkButton(self.frame_principal, text="Eliminar Estudiante", command=self.eliminar_estudiante)
+        btn_eliminar.pack(pady=20)
 
         # Botón para volver
         btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.menu_estudiantes)
         btn_volver.pack(pady=20)
 
-    def eliminar_estudiante_treeview(self):
-        selected_item = self.tree_estudiantes.selection()  # Obtener el elemento seleccionado
-        if not selected_item:
-            CTkM(title="Error", message="Debe seleccionar un estudiante para eliminar.", icon="error")
+
+    def eliminar_estudiante(self):
+        # Obtener la selección del Treeview
+        fila = self.tree_estudiantes.selection()
+
+        # Verificar si hay selección
+        if not fila:
+            CTkM(title="Error", message="Debe seleccionar un estudiante para eliminar.", icon="cancel")
             return
 
-        matricula_seleccionada = self.tree_estudiantes.item(selected_item)["values"][1]  # Obtener la matrícula del estudiante seleccionado
+        # Obtener los valores del estudiante seleccionado
+        estudiante_id = fila[0]
+        valores = self.tree_estudiantes.item(estudiante_id, "values")
+        matricula = valores[2]  # La matrícula es el tercer valor (índice 3) en la fila
 
-        # Buscar y eliminar al estudiante de la lista
-        for estudiante in self.estudiantes:
-            if estudiante.matricula == matricula_seleccionada:
-                self.estudiantes.remove(estudiante)
-                CTkM(title="Éxito", message=f"Estudiante con matrícula {matricula_seleccionada} eliminado.", icon="info")
-                break
+        # Confirmar la eliminación
+        confirmacion = CTkM(title="Confirmación", message=f"¿Está seguro de que desea eliminar al estudiante con matrícula {matricula}?", icon="warning", option_1="Cancelar", option_2="Eliminar")
+        
+        if confirmacion.get() == "Eliminar":
+            # Eliminar el estudiante de la lista
+            for estudiante in self.estudiantes:
+                if estudiante.matricula == matricula:
+                    self.estudiantes.remove(estudiante)
+                    break
 
-        # Eliminar el estudiante del Treeview
-        self.tree_estudiantes.delete(selected_item)
+            # Eliminar el estudiante del Treeview
+            self.tree_estudiantes.delete(estudiante_id)
 
-    # Función para limpiar el frame principal antes de mostrar un nuevo menú
+            # Mostrar mensaje de éxito
+            CTkM(title="Éxito", message=f"Estudiante con matrícula {matricula} eliminado correctamente.", icon="info")
+
+    # Métodos auxiliares para buscar asignaturas y profesores
     def buscar_programa(self, codigo):
         for programa in self.programas:
             if programa.codigo == codigo:
                 return programa
         return None
 
-    # Métodos auxiliares para buscar asignaturas y profesores
     def buscar_asignatura(self, codigo_asignatura):
         for asignatura in self.asignaturas:
             if asignatura.codigo == codigo_asignatura:
@@ -332,11 +353,13 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
             if estudiante.matricula == matricula:
                 return estudiante
         return None  
-
+    
+    # Función para limpiar el frame principal antes de mostrar un nuevo menú
     def limpiar_frame(self):
         for widget in self.frame_principal.winfo_children():
             widget.destroy()
 
+    # Función para validar cadenas de texto
     def validar_str(self, valor, atributo):
         if not re.match(r"^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$", valor):
             CTkM(title="Error", message=f"Para ingresar {atributo} es necesario que sean solo caracteres validos.", icon="cancel")
