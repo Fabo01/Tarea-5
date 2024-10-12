@@ -32,8 +32,8 @@ class Estudiante(Persona):
         self.__semestre = semestre
 
     def estudiar(self, asignatura, horas):
-        print(f'{self.nombre} estudia {asignatura} durante {horas} horas.')
+        return f'{self.nombre} estudia {asignatura} durante {horas} horas.'
 
     def presentarse(self):
         edad = self.calcular_edad()
-        print(f'Nombre: {self.nombre}, Edad: {edad}, Carrera: {self.carrera}, Semestre: {self.semestre}, Matricula: {self.matricula}')
+        return f'Hola, soy {self.nombre}, tengo {edad} años de edad, estudio {self.carrera} y estoy cursando el {self.semestre} semestre, mi matricula es: {self.matricula}'

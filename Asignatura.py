@@ -31,4 +31,4 @@ class Asignatura(MostrarInfo):
         self.__creditos = creditos
 
     def mostrar_info(self):
-        print(f'Asignatura: {self.nombre}, Codigo: {self.codigo}, Creditos: {self.creditos}')
+        return f'Asignatura: {self.nombre}\nCodigo: {self.codigo}\nCreditos: {self.creditos}'

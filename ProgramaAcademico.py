@@ -30,17 +30,16 @@ class ProgramaAcademico(MostrarInfo):
     def agregar_grupo(self, grupo):
         if grupo not in self.__grupos:
             self.__grupos.append(grupo)
-            print(f"\nGrupo {grupo.ngrupo} ha sido agregado al programa {self.__nombre}.")
+            return f"Grupo {grupo.ngrupo} ha sido agregado al programa {self.__nombre}."
         else:
-            print(f"\nEl grupo {grupo.ngrupo} ya está registrado en el programa.")
+            return f"El grupo {grupo.ngrupo} ya está registrado en el programa."
 
     def eliminar_grupo(self, ngrupo):
         for grupo in self.__grupos:
             if grupo.ngrupo == ngrupo:
                 self.__grupos.remove(grupo)
-                print(f"\nGrupo {ngrupo} ha sido eliminado del programa.")
-                return
-        print(f"\nNo se encontró un grupo con el número {ngrupo}.")
+                return f"Grupo {ngrupo} ha sido eliminado del programa."
+        return f"No se encontró un grupo con el número {ngrupo}."
 
     def mostrar_info(self):
         print(f"Programa: {self.__nombre}, Código: {self.__codigo}")

@@ -41,17 +41,16 @@ class Grupo(MostrarInfo):
     def agregar_estudiante(self, estudiante):             
         if estudiante not in self.__estudiantes:
             self.__estudiantes.append(estudiante)
-            print(f"\nEstudiante {estudiante.nombre} ha sido agregado al grupo {self.__ngrupo}.")
+            return f"Estudiante {estudiante.nombre}, Matricula:{estudiante.matricula} ha sido agregado al grupo {self.__ngrupo}."
         else:
-            print(f"\nEl estudiante {estudiante.nombre} ya está inscrito en el grupo.")
+            return f"El estudiante {estudiante.nombre}, Matricula:{estudiante.matricula} ya está inscrito en el grupo."
 
     def eliminar_estudiante(self, matricula):
         for estudiante in self.__estudiantes:
             if estudiante.matricula == matricula:
                 self.__estudiantes.remove(estudiante)
-                print(f"\nEstudiante con matrícula {matricula} ha sido eliminado del grupo.")
-                return
-        print(f"\nNo se encontró un estudiante con matrícula {matricula}.")
+                return f"Estudiante con matrícula {matricula} ha sido eliminado del grupo."
+        return f"No se encontró un estudiante con matrícula {matricula}."
 
     def mostrar_info(self):
         print(f"Grupo: {self.__ngrupo}, Asignatura: {self.__asignatura.nombre}, Profesor: {self.__profesor.nombre}")

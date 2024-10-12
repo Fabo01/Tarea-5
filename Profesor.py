@@ -23,8 +23,8 @@ class Profesor(Persona):
         self.__departamento = departamento
 
     def enseñar(self, asignatura, horas):
-        print(f'{self.nombre} imparte la asignatura {asignatura} durante {horas} horas.')
+        return f'{self.nombre} imparte la asignatura {asignatura} durante {horas} horas.'
 
     def presentarse(self):
         edad = self.calcular_edad()
-        print(f'Nombre: {self.nombre}, Edad: {edad}, Departamento: {self.departamento}, Num. Empleado: {self.n_empleado}')
+        return f'Hola, soy {self.nombre}, tengo {edad} años de edad, soy profesor del departamento de {self.departamento} y mi número de empleado es: {self.n_empleado}'
