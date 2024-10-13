@@ -42,7 +42,8 @@ class ProgramaAcademico(MostrarInfo):
         return f"No se encontró un grupo con el número {ngrupo}."
 
     def mostrar_info(self):
-        print(f"Programa: {self.__nombre}, Código: {self.__codigo}")
-        print("Grupos:")
-        for grupo in self.__grupos:
-            grupo.mostrar_info()    
+        info = f"El Programa Academico {self.__nombre}, con Código: {self.__codigo}\n Tiene los Grupos:"
+        for grupo in self.grupos:
+            info += f"\n{grupo.mostrar_info()}"
+        return info
+    

@@ -9,6 +9,7 @@ class Grupo(MostrarInfo):
         self.__asignatura = asignatura
         self.__profesor = profesor
         self.__estudiantes = []
+        self.__lista_asignaturas = []
 
     @property
     def ngrupo(self):
@@ -19,14 +20,6 @@ class Grupo(MostrarInfo):
         self.__ngrupo = ngrupo
 
     @property
-    def asignatura(self):
-        return self.__asignatura
-    
-    @asignatura.setter
-    def asignatura(self, asignatura):
-        self.__asignatura = asignatura
-
-    @property
     def profesor(self):
         return self.__profesor
     
@@ -35,8 +28,37 @@ class Grupo(MostrarInfo):
         self.__profesor = profesor
 
     @property
+    def lista_asignaturas(self):
+        return self.__lista_asignaturas
+    
+    @property
     def estudiantes(self):
         return self.__estudiantes
+    
+    @property  
+    def asignatura(self):
+        return self.__asignatura
+    
+    @asignatura.setter 
+    def asignatura(self, asignatura):
+        self.__asignatura = asignatura
+
+    def agregar_asignatura(self, asignatura):  
+        if len(self.__lista_asignaturas) == 0:
+            self.__lista_asignaturas.append(self.__asignatura)
+            return f"Asignatura {asignatura.nombre}, Código:{asignatura.codigo} ha sido agregada al grupo {self.__ngrupo}."           
+        if asignatura not in self.__lista_asignaturas:
+            self.__estudiantes.append(asignatura)
+            return f"Estudiante {asignatura.codigo}, Matricula:{asignatura.codigo} ha sido agregado al grupo {self.__ngrupo}."
+        else:
+            return f"El estudiante {asignatura.codigo}, Matricula:{asignatura.codigo} ya está inscrito en el grupo."
+
+    def eliminar_asignatura(self, codigo):
+        for asignatura in self.__lista_asignaturas:
+            if asignatura.codigo == codigo:
+                self.__lista_asignaturas.remove(asignatura)
+                return f"Estudiante con matrícula {codigo} ha sido eliminado del grupo."
+        return f"No se encontró un estudiante con matrícula {codigo}."
     
     def agregar_estudiante(self, estudiante):             
         if estudiante not in self.__estudiantes:
@@ -53,8 +75,12 @@ class Grupo(MostrarInfo):
         return f"No se encontró un estudiante con matrícula {matricula}."
 
     def mostrar_info(self):
-        print(f"Grupo: {self.__ngrupo}, Asignatura: {self.__asignatura.nombre}, Profesor: {self.__profesor.nombre}")
-        print("Estudiantes:")
-        for estudiante in self.__estudiantes:
-            edad = estudiante.calcular_edad()
-            print(f" - {estudiante.nombre} de {edad} años, matrícula: {estudiante.matricula}")
+        info = f'El Grupo n°{self.__ngrupo} con el Profesor: {self.__profesor.nombre}\nCon las Asignaturas:\n'
+        for asign in self.lista_asignaturas:
+            info += f'{asign.nombre}, Codigo: {asign.codigo}\n'
+        info += 'Y los Estudiantes:\n'
+        for estudiante in self.estudiantes:
+            info += f'{estudiante.nombre}, Matricula: {estudiante.matricula}\n'
+        return info
+    
+    

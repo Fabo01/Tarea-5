@@ -49,8 +49,8 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
         btn_grupos = CTk.CTkButton(self.frame_principal, text="Gestionar Grupos", command=self.menu_grupos)
         btn_grupos.pack(pady=10)
 
-        # btn_programas = CTk.CTkButton(self.frame_principal, text="Gestionar Programas Académicos", command=self.menu_programas)
-        # btn_programas.pack(pady=10)
+        btn_programas = CTk.CTkButton(self.frame_principal, text="Gestionar Programas Académicos", command=self.menu_programas)
+        btn_programas.pack(pady=10)
         
     # Menú de estudiantes
     def menu_estudiantes(self):
@@ -677,7 +677,10 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
         btn_mostrar_grupos = CTk.CTkButton(self.frame_principal, text="Mostrar Grupos", command=self.mostrar_grupos)
         btn_mostrar_grupos.pack(pady=10)
 
-        btn_gestionar_estudiantes = CTk.CTkButton(self.frame_principal, text="Gestionar Estudiantes en Grupo", command=self.gestionar_estudiantes_grupo)
+        btn_gestionar_estudiantes = CTk.CTkButton(self.frame_principal, text="Gestionar Estudiantes del Grupo", command=self.gestionar_estudiantes_grupo)
+        btn_gestionar_estudiantes.pack(pady=10)
+
+        btn_gestionar_estudiantes = CTk.CTkButton(self.frame_principal, text="Gestionar Asignaturas del Grupo", command=self.gestionar_asignaturas_grupo)
         btn_gestionar_estudiantes.pack(pady=10)
 
         btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.crear_menu_principal)
@@ -767,13 +770,12 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
         titulo = CTk.CTkLabel(self.frame_principal, text="Lista de Grupos", font=("Arial", 24))
         titulo.pack(pady=20)
 
-        columnas = list(vars(self.grupos[0]).keys())
+        columnas = ["Número de Grupo", "Asignatura Instanciada", "Profesor"]
 
         self.tree_grupos = ttk.Treeview(self.frame_principal, columns=columnas, show="headings")
 
         for columna in columnas:
-            columna_formateada = columna.replace("_", " ").capitalize()
-            self.tree_grupos.heading(columna, text=columna_formateada)
+            self.tree_grupos.heading(columna, text=columna)
 
         self.tree_grupos.pack(pady=10)
 
@@ -781,8 +783,56 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
             valores = [grupo.ngrupo, grupo.asignatura.nombre, grupo.profesor.nombre]
             self.tree_grupos.insert("", "end", values=valores)
 
+        btn_mostrar_detalles = CTk.CTkButton(self.frame_principal, text="Mostrar Detalles", command=self.mostrar_detalles_grupo)
+        btn_mostrar_detalles.pack(pady=20)
+
+        btn_mostrar_detalles = CTk.CTkButton(self.frame_principal, text="Eliminar Grupo", command=self.eliminar_grupo)
+        btn_mostrar_detalles.pack(pady=20)
+
         btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.menu_grupos)
         btn_volver.pack(pady=20)
+
+    def mostrar_detalles_grupo(self):
+        # Obtener selección del Treeview
+        seleccion = self.tree_grupos.selection()
+
+        if not seleccion:
+            CTkM(title="Error", message="Debe seleccionar un grupo para ver los detalles.", icon="cancel")
+            return
+
+        grupo_id = seleccion[0]
+        valores = self.tree_grupos.item(grupo_id, "values")
+        ngrupo = valores[0]
+
+        grupo = self.buscar_grupo(ngrupo)
+
+        if not grupo:
+            CTkM(title="Error", message=f"No se encontró el grupo con número {ngrupo}.", icon="cancel")
+            return
+        # Mostrar los detalles en un cuadro de diálogo
+        CTkM(title="Detalles del Grupo", message=f"{grupo.mostrar_info()}", icon="info")
+
+    def eliminar_grupo(self):
+        seleccion = self.tree_grupos.selection()
+
+        if not seleccion:
+            CTkM(title="Error", message="Debe seleccionar un grupo para eliminar.", icon="cancel")
+            return
+
+        grupo_id = seleccion[0]
+        valores = self.tree_grupos.item(grupo_id, "values")
+        ngrupo = valores[0]
+
+        grupo = self.buscar_grupo(ngrupo)
+
+        if not grupo:
+            CTkM(title="Error", message=f"No se encontró el grupo con número {ngrupo}.", icon="cancel")
+            return
+
+        # Eliminar el grupo de la lista y del Treeview
+        self.grupos.remove(grupo)
+        self.tree_grupos.delete(grupo_id)
+        CTkM(title="Éxito", message=f"Grupo {ngrupo} eliminado correctamente.", icon="info")
 
     def gestionar_estudiantes_grupo(self):
         self.limpiar_frame()
@@ -827,6 +877,10 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
         grupo = self.buscar_grupo(ngrupo)
         estudiante = self.buscar_estudiante(matricula)
 
+        if estudiante in grupo.estudiantes:
+            CTkM(title="Error", message=f"El estudiante con matrícula {matricula} ya está en el grupo {ngrupo}.", icon="cancel")
+            return
+
         if not grupo:
             CTkM(title="Error", message=f"No se encontró el grupo con número {ngrupo}.", icon="cancel")
             return
@@ -834,7 +888,7 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
         if not estudiante:
             CTkM(title="Error", message=f"No se encontró un estudiante con matrícula {matricula}.", icon="cancel")
             return
-
+        
         CTkM(title="Éxito", message=f"{grupo.agregar_estudiante(estudiante)}", icon="check")
 
     # Eliminar estudiante de grupo
@@ -853,14 +907,320 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
             CTkM(title="Error", message=f"No se encontró un estudiante con matrícula {matricula}.", icon="cancel")
             return
 
-        # Verificar si el estudiante está en el grupo
-        if estudiante not in grupo.estudiantes:
-            CTkM(title="Error", message=f"El estudiante con matrícula {matricula} no está en el grupo {ngrupo}.", icon="cancel")
+        # Confirmación antes de eliminar
+        confirmacion = CTkM(title="Confirmación", message=f"¿Está seguro de que desea eliminar al estudiante {estudiante.nombre}, Matricula: {estudiante.matricula} del grupo {ngrupo}?", icon="warning", option_1="Cancelar", option_2="Eliminar")
+        
+        if confirmacion.get() == "Eliminar":
+            # Verificar si el estudiante está en el grupo
+            if estudiante not in grupo.estudiantes:
+                CTkM(title="Error", message=f"El estudiante con matrícula {matricula} no está en el grupo {ngrupo}.", icon="cancel")
+                return
+            # Eliminar el estudiante del grupo
+            CTkM(title="Éxito", message=f"{grupo.eliminar_estudiante(matricula)}", icon="info")
+
+
+    def gestionar_asignaturas_grupo(self):
+        self.limpiar_frame()
+
+        if not self.grupos:
+            CTkM(title="Error", message="No hay grupos creados.", icon="cancel")
+            self.crear_menu_principal()
             return
 
-        # Eliminar el estudiante del grupo
-        CTkM(title="Éxito", message=f"{grupo.eliminar_estudiante(matricula)}", icon="check")
+        titulo = CTk.CTkLabel(self.frame_principal, text="Gestión de Asignaturas en Grupos", font=("Arial", 24))
+        titulo.pack(pady=20)
 
+        label_ngrupo = CTk.CTkLabel(self.frame_principal, text="Número de Grupo:")
+        label_ngrupo.pack()
+        self.entry_ngrupo_asignaturas = CTk.CTkEntry(self.frame_principal)
+        self.entry_ngrupo_asignaturas.pack()
+
+        label_asignatura = CTk.CTkLabel(self.frame_principal, text="Código de la Asignatura:")
+        label_asignatura.pack()
+        self.entry_asignatura = CTk.CTkEntry(self.frame_principal)
+        self.entry_asignatura.pack()
+
+        btn_agregar_asignatura = CTk.CTkButton(self.frame_principal, text="Agregar Asignatura", command=self.agregar_asignatura_grupo)
+        btn_agregar_asignatura.pack(pady=10)
+
+        btn_eliminar_asignatura = CTk.CTkButton(self.frame_principal, text="Eliminar Asignatura", command=self.eliminar_asignatura_grupo)
+        btn_eliminar_asignatura.pack(pady=10)
+
+        btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.menu_grupos)
+        btn_volver.pack(pady=20)
+
+    def agregar_asignatura_grupo(self):
+        ngrupo = self.entry_ngrupo_asignaturas.get()
+        codigo_asignatura = self.entry_asignatura.get()
+
+        grupo = self.buscar_grupo(ngrupo)
+
+        if not grupo:
+            CTkM(title="Error", message=f"No se encontró el grupo con número {ngrupo}.", icon="cancel")
+            return
+
+        asignatura = self.buscar_asignatura(codigo_asignatura)
+
+        if not asignatura:
+            CTkM(title="Error", message=f"No se encontró la asignatura con código {codigo_asignatura}.", icon="cancel")
+            return
+        
+        if asignatura in grupo.lista_asignaturas:
+            CTkM(title="Error", message=f"La asignatura con código {codigo_asignatura} ya está en el grupo {ngrupo}.", icon="cancel")
+            return
+        
+        CTkM(title="Éxito", message=f"{grupo.agregar_asignatura(asignatura)}", icon="check")  
+
+    def eliminar_asignatura_grupo(self):
+        ngrupo = self.entry_ngrupo_asignaturas.get()
+        codigo_asignatura = self.entry_asignatura.get()
+
+        grupo = self.buscar_grupo(ngrupo)
+
+        if not grupo:
+            CTkM(title="Error", message=f"No se encontró el grupo con número {ngrupo}.", icon="cancel")
+            return
+
+        asignatura = self.buscar_asignatura(codigo_asignatura)
+        if not asignatura:
+            CTkM(title="Error", message=f"No se encontró la asignatura con código {codigo_asignatura}.", icon="cancel")
+            return
+
+        # Confirmación antes de eliminar
+        confirmacion = CTkM(title="Confirmación", message=f"¿Está seguro de que desea eliminar la asignatura {asignatura.nombre} del grupo {ngrupo}?", icon="warning", option_1="Cancelar", option_2="Eliminar")
+        
+        if confirmacion.get() == "Eliminar":
+            # Verificar si la asignatura está en el grupo
+            if asignatura not in grupo.lista_asignaturas:
+                CTkM(title="Error", message=f"La asignatura con código {codigo_asignatura} no está en el grupo {ngrupo}.", icon="cancel")
+                return
+
+            # Eliminar la asignatura del grupo
+            CTkM(title="Éxito", message=f"{grupo.eliminar_asignatura(codigo_asignatura)}", icon="info")
+
+    # Menú de programas académicos
+    def menu_programas(self):
+        self.limpiar_frame()
+
+        titulo = CTk.CTkLabel(self.frame_principal, text="Gestión de Programas Académicos", font=("Arial", 24))
+        titulo.pack(pady=20)
+
+        btn_agregar_programa = CTk.CTkButton(self.frame_principal, text="Crear Programa Académico", command=self.crear_programa_academico)
+        btn_agregar_programa.pack(pady=10)
+
+        btn_mostrar_programas = CTk.CTkButton(self.frame_principal, text="Mostrar Programas", command=self.mostrar_programas)
+        btn_mostrar_programas.pack(pady=10)
+
+        btn_gestionar_grupos_programa = CTk.CTkButton(self.frame_principal, text="Gestionar Grupos en Programas", command=self.menu_gestion_grupos_programa)
+        btn_gestionar_grupos_programa.pack(pady=10)
+
+        btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.crear_menu_principal)
+        btn_volver.pack(pady=20)
+
+    def crear_programa_academico(self):
+        self.limpiar_frame()
+
+        titulo = CTk.CTkLabel(self.frame_principal, text="Crear Programa Académico", font=("Arial", 24))
+        titulo.pack(pady=20)
+
+        label_nombre_programa = CTk.CTkLabel(self.frame_principal, text="Nombre del Programa:")
+        label_nombre_programa.pack()
+        self.entry_nombre_programa = CTk.CTkEntry(self.frame_principal)
+        self.entry_nombre_programa.pack()
+
+        label_codigo_programa = CTk.CTkLabel(self.frame_principal, text="Código del Programa:")
+        label_codigo_programa.pack()
+        self.entry_codigo_programa = CTk.CTkEntry(self.frame_principal)
+        self.entry_codigo_programa.pack()
+
+        btn_guardar_programa = CTk.CTkButton(self.frame_principal, text="Guardar Programa", command=self.ingresar_programa_academico)
+        btn_guardar_programa.pack(pady=20)
+
+        btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.menu_programas)
+        btn_volver.pack(pady=20)
+
+    # Función para ingresar el programa académico
+    def ingresar_programa_academico(self):
+        nombre_programa = self.entry_nombre_programa.get()
+        codigo_programa = self.entry_codigo_programa.get()
+
+        # Validaciones
+        if not all([nombre_programa, codigo_programa]):
+            CTkM(title="Error", message="Todos los campos son obligatorios.", icon="cancel")
+            return
+        
+        if not self.validar_numero(codigo_programa, "código del programa"):
+            return
+        # Verificar si el programa ya existe
+        for programa in self.programas:
+            if programa.codigo == codigo_programa:
+                CTkM(title="Error", message=f"El programa con código {codigo_programa} ya existe.", icon="cancel")
+                return
+
+        # Crear el nuevo programa académico
+        nuevo_programa = ProgramaAcademico(nombre_programa, codigo_programa)
+        self.programas.append(nuevo_programa)
+        CTkM(title="Éxito", message=f"Programa {nombre_programa} creado correctamente.", icon="check")
+
+    def mostrar_programas(self):
+        self.limpiar_frame()
+
+        if not self.programas:
+            CTkM(title="Error", message="No hay programas académicos creados.", icon="cancel")
+            self.crear_menu_principal()
+            return
+
+        titulo = CTk.CTkLabel(self.frame_principal, text="Lista de Programas Académicos", font=("Arial", 24))
+        titulo.pack(pady=20)
+
+        columnas = ["Código del Programa", "Nombre del Programa"]
+
+        self.tree_programas = ttk.Treeview(self.frame_principal, columns=columnas, show="headings")
+    
+        for columna in columnas:
+            self.tree_programas.heading(columna, text=columna)
+
+        self.tree_programas.pack(pady=10)
+
+        for programa in self.programas:
+            valores = [programa.codigo, programa.nombre]
+            self.tree_programas.insert("", "end", values=valores)
+
+        btn_mostrar_detalles = CTk.CTkButton(self.frame_principal, text="Mostrar Detalles", command=self.mostrar_detalles_programa)
+        btn_mostrar_detalles.pack(pady=10)
+
+        btn_eliminar_programa = CTk.CTkButton(self.frame_principal, text="Eliminar Programa", command=self.eliminar_programa)
+        btn_eliminar_programa.pack(pady=10)
+
+        btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.menu_programas)
+        btn_volver.pack(pady=20)
+
+    def mostrar_detalles_programa(self):
+        seleccion = self.tree_programas.selection()
+
+        if not seleccion:
+            CTkM(title="Error", message="Debe seleccionar un programa académico para ver los detalles.", icon="cancel")
+            return
+
+        programa_id = seleccion[0]
+        valores = self.tree_programas.item(programa_id, "values")
+        codigo_programa = valores[0]
+
+        programa = self.buscar_programa(codigo_programa)
+
+        if not programa:
+            CTkM(title="Error", message=f"No se encontró el programa con código {codigo_programa}.", icon="cancel")
+            return
+
+        CTkM(title="Detalles del Programa Académico", message=f"{programa.mostrar_info()}", icon="info")
+
+    def eliminar_programa(self):
+        seleccion = self.tree_programas.selection()
+
+        if not seleccion:
+            CTkM(title="Error", message="Debe seleccionar un programa académico para eliminar.", icon="cancel")
+            return
+
+        programa_id = seleccion[0]
+        valores = self.tree_programas.item(programa_id, "values")
+        codigo_programa = valores[0]
+
+        programa = self.buscar_programa(codigo_programa)
+
+        if not programa:
+            CTkM(title="Error", message=f"No se encontró el programa con código {codigo_programa}.", icon="cancel")
+            return
+
+        # Confirmación antes de eliminar
+        confirmacion = CTkM(title="Confirmación", message=f"¿Está seguro de que desea eliminar el programa {programa.nombre}?", icon="warning", option_1="Cancelar", option_2="Eliminar")
+        
+        if confirmacion.get() == "Eliminar":
+            # Eliminar el programa de la lista y del Treeview
+            self.programas.remove(programa)
+            self.tree_programas.delete(programa_id)
+            CTkM(title="Éxito", message=f"Programa {programa.nombre} eliminado correctamente.", icon="info")
+
+    def menu_gestion_grupos_programa(self):
+        self.limpiar_frame()
+
+        if not self.programas:
+            CTkM(title="Error", message="No hay programas académicos creados.", icon="cancel")
+            self.crear_menu_principal()
+            return
+        
+        if not self.grupos:
+            CTkM(title="Error", message="No hay grupos creados.", icon="cancel")
+            self.crear_menu_principal()
+            return
+
+        titulo = CTk.CTkLabel(self.frame_principal, text="Gestión de Grupos en Programas", font=("Arial", 24))
+        titulo.pack(pady=20)
+
+        label_codigo_programa = CTk.CTkLabel(self.frame_principal, text="Código del Programa:")
+        label_codigo_programa.pack()
+        self.entry_codigo_programa_grupos = CTk.CTkEntry(self.frame_principal)
+        self.entry_codigo_programa_grupos.pack()
+
+        label_ngrupo = CTk.CTkLabel(self.frame_principal, text="Número de Grupo:")
+        label_ngrupo.pack()
+        self.entry_ngrupo_programa = CTk.CTkEntry(self.frame_principal)
+        self.entry_ngrupo_programa.pack()
+
+        btn_agregar_grupo_programa = CTk.CTkButton(self.frame_principal, text="Agregar Grupo", command=self.agregar_grupo_programa)
+        btn_agregar_grupo_programa.pack(pady=10)
+
+        btn_eliminar_grupo_programa = CTk.CTkButton(self.frame_principal, text="Eliminar Grupo", command=self.eliminar_grupo_programa)
+        btn_eliminar_grupo_programa.pack(pady=10)
+
+        btn_volver = CTk.CTkButton(self.frame_principal, text="Volver", command=self.menu_programas)
+        btn_volver.pack(pady=20)
+
+    def agregar_grupo_programa(self):
+        codigo_programa = self.entry_codigo_programa_grupos.get()
+        ngrupo = self.entry_ngrupo_programa.get()
+
+        programa = self.buscar_programa(codigo_programa)
+
+        if not programa:
+            CTkM(title="Error", message=f"No se encontró el programa con código {codigo_programa}.", icon="cancel")
+            return
+
+        grupo = self.buscar_grupo(ngrupo)
+
+        if not grupo:
+            CTkM(title="Error", message=f"No se encontró el grupo con número {ngrupo}.", icon="cancel")
+            return
+
+        if grupo in programa.grupos:
+            CTkM(title="Error", message=f"El grupo con número {ngrupo} ya está en el programa {programa.nombre}.", icon="cancel")
+            return
+        
+        CTkM(title="Éxito", message=f"{programa.agregar_grupo(grupo)}.", icon="check")
+
+    def eliminar_grupo_programa(self):
+        codigo_programa = self.entry_codigo_programa_grupos.get()
+        ngrupo = self.entry_ngrupo_programa.get()
+
+        # Buscar el programa académico
+        programa = self.buscar_programa(codigo_programa)
+
+        if not programa:
+            CTkM(title="Error", message=f"No se encontró el programa con código {codigo_programa}.", icon="cancel")
+            return
+
+        # Buscar el grupo dentro del programa
+        grupo = self.buscar_grupo(ngrupo)
+
+        if not grupo:
+            CTkM(title="Error", message=f"No se encontró el grupo con número {ngrupo} en el programa {programa.nombre}.", icon="cancel")
+            return
+
+        # Confirmación antes de eliminar
+        confirmacion = CTkM(title="Confirmación", message=f"¿Está seguro de que desea eliminar el grupo {ngrupo} del programa {programa.nombre}?", icon="warning", option_1="Cancelar", option_2="Eliminar")
+
+        if confirmacion.get() == "Eliminar":
+            # Eliminar el grupo del programa
+            CTkM(title="Éxito", message=f"{programa.eliminar_grupo(ngrupo)}", icon="info")
 
     # Métodos auxiliares para buscar asignaturas y profesores
     def buscar_programa(self, codigo):
@@ -915,11 +1275,18 @@ class SistemaGestionUniversitariaApp(CTk.CTk):
     # Validar la fecha de nacimiento en formato DD/MM/AAAA
     def validar_fecha(self, fnac):
         try:
-            datetime.strptime(fnac, "%d/%m/%Y")
+            fecha_nac = datetime.strptime(fnac, "%d/%m/%Y")
+            fecha_actual = datetime.now()
+
+            if fecha_nac > fecha_actual:
+                CTkM(title="Error", message="La fecha de nacimiento no puede ser en el futuro.", icon="cancel")
+                return False
+
             return True
         except ValueError:
             CTkM(title="Error", message="La fecha de nacimiento debe tener el formato DD/MM/AAAA.", icon="cancel")
-            return False    
+            return False
+    
 
 if __name__ == "__main__":
     app = SistemaGestionUniversitariaApp()
